@@ -27,7 +27,7 @@ public class PlayerController {
   @PostMapping("/add")
   public Player addPlayer(@RequestParam String playerId, @RequestParam String apiKey, @RequestParam Long userId) {
     // Here you could add logic to fetch player details via CoC API using the apiKey
-    User user = userService.findByUsername("username").orElseThrow();
+    User user = userService.findByUsername("username");
     Player player = Player.builder()
                           .playerId(playerId)
                           .user(user)
