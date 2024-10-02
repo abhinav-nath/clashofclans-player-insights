@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URLEncoder;
+
 @Service
 public class PlayerService {
 
@@ -20,18 +22,24 @@ public class PlayerService {
   }
 
   public PlayerDetailsResponse fetchPlayerDetails(String playerId, String apiKey) {
-    String url = COC_API_URL + "%23" + playerId;
+    String url = COC_API_URL + URLEncoder.encode("#") + playerId;
 
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + apiKey);
+    headers.set("Authorization", apiKey);
 
     HttpEntity<String> entity = new HttpEntity<>(headers);
 
-    ResponseEntity<PlayerDetailsResponse> response = restTemplate.exchange(
-      url, HttpMethod.GET, entity, PlayerDetailsResponse.class
-    );
+    try {
+      ResponseEntity<PlayerDetailsResponse> response = restTemplate.exchange(
+        url, HttpMethod.GET, entity, PlayerDetailsResponse.class
+      );
+      return response.getBody();
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
 
-    return response.getBody();
+    return null;
+
   }
 
 }

@@ -1,0 +1,14 @@
+version: '3.1'
+
+services:
+  clashOfClansPlayerInsightsDb:
+    image: "postgres:13.4"
+    container_name: clashofclans-player-insights-db
+    restart: always
+    environment:
+      POSTGRES_USER: clashOfClansPlayerInsightsDbUser
+      POSTGRES_PASSWORD: clashOfClansPlayerInsightsDbPassword
+      POSTGRES_DB: clashOfClansPlayerInsightsDb
+    ports:
+      - 5432:5432
+    command: [ "postgres", "-c", "log_statement=all", "-c", "log_destination=stderr" ]

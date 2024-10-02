@@ -1,6 +1,7 @@
 package com.codecafe.clashofclansplayerinsights.controller;
 
 import com.codecafe.clashofclansplayerinsights.entity.User;
+import com.codecafe.clashofclansplayerinsights.model.CreateUserRequest;
 import com.codecafe.clashofclansplayerinsights.model.PlayerDetailsResponse;
 import com.codecafe.clashofclansplayerinsights.service.PlayerService;
 import com.codecafe.clashofclansplayerinsights.service.UserService;
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
+import static org.springframework.util.CollectionUtils.isEmpty;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,20 +35,24 @@ public class UserController {
   }
 
   @PostMapping
-  public User createUser(@Valid @RequestBody User user) {
+  public User createUser(@Valid @RequestBody CreateUserRequest user) {
     return userService.registerUser(user.getUsername(), user.getPassword(), user.getApiKey());
   }
 
   @PutMapping("/{username}/players")
-  public User addOrUpdatePlayerIds(@PathVariable String username, @RequestBody Set<String> playerIds) {
+  public User addPlayerIds(@PathVariable String username, @RequestBody Set<String> playerIds) {
     User user = userService.getUserByUsername(username);
+
+    if (!isEmpty(user.getPlayerIds())) {
+      user.getPlayerIds().removeAll(playerIds);
+    }
 
     user.getPlayerIds().addAll(playerIds);
 
     return userService.saveUser(user);
   }
 
-  @GetMapping("/{username}/players")
+  @GetMapping
   public List<PlayerDetailsResponse> getAllPlayerDetailsForUser(@PathVariable String username) {
     User user = userService.getUserByUsername(username);
     Set<String> playerIds = user.getPlayerIds();
