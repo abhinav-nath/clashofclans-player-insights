@@ -1,24 +1,37 @@
 package com.codecafe.clashofclansplayerinsights.service;
 
-import com.codecafe.clashofclansplayerinsights.entity.Player;
-import com.codecafe.clashofclansplayerinsights.repository.PlayerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.codecafe.clashofclansplayerinsights.model.PlayerDetailsResponse;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class PlayerService {
 
-  @Autowired
-  private PlayerRepository playerRepository;
+  private static final String COC_API_URL = "https://api.clashofclans.com/v1/players/";
 
-  public List<Player> getPlayersByUserId(Long userId) {
-    return playerRepository.findByUserId(userId);
+  private final RestTemplate restTemplate;
+
+  public PlayerService(RestTemplate restTemplate) {
+    this.restTemplate = restTemplate;
   }
 
-  public Player savePlayer(Player player) {
-    return playerRepository.save(player);
+  public PlayerDetailsResponse fetchPlayerDetails(String playerId, String apiKey) {
+    String url = COC_API_URL + "%23" + playerId;
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + apiKey);
+
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+
+    ResponseEntity<PlayerDetailsResponse> response = restTemplate.exchange(
+      url, HttpMethod.GET, entity, PlayerDetailsResponse.class
+    );
+
+    return response.getBody();
   }
 
 }

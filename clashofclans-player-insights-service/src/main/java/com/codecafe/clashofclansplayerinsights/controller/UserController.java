@@ -1,47 +1,65 @@
 package com.codecafe.clashofclansplayerinsights.controller;
 
-import com.codecafe.clashofclansplayerinsights.entity.Player;
 import com.codecafe.clashofclansplayerinsights.entity.User;
+import com.codecafe.clashofclansplayerinsights.model.PlayerDetailsResponse;
 import com.codecafe.clashofclansplayerinsights.service.PlayerService;
 import com.codecafe.clashofclansplayerinsights.service.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
-  @Autowired
-  private UserService userService;
+  private final UserService userService;
+  private final PlayerService playerService;
 
-  @Autowired
-  private PlayerService playerService;
+  public UserController(UserService userService, PlayerService playerService) {
+    this.userService = userService;
+    this.playerService = playerService;
+  }
 
   @PostMapping
   public User createUser(@Valid @RequestBody User user) {
     return userService.registerUser(user.getUsername(), user.getPassword(), user.getApiKey());
   }
 
-  @PutMapping("/{userId}/players")
-  public Player addOrUpdatePlayerToUser(@PathVariable String userName, @RequestParam String playerId) {
+  @PutMapping("/{username}/players")
+  public User addOrUpdatePlayerIds(@PathVariable String username, @RequestBody Set<String> playerIds) {
+    User user = userService.getUserByUsername(username);
 
-    User user = userService.findByUsername(userName);
+    user.getPlayerIds().addAll(playerIds);
 
-    // Fetch player details from CoC API (logic omitted for simplicity)
-    Player player = Player.builder()
-                          .playerId(playerId)
-                          .user(user)
-                          .build();
+    return userService.saveUser(user);
+  }
 
-    // Save the player and associate it with the user (idempotent update)
-    return playerService.savePlayer(player);
+  @GetMapping("/{username}/players")
+  public List<PlayerDetailsResponse> getAllPlayerDetailsForUser(@PathVariable String username) {
+    User user = userService.getUserByUsername(username);
+    Set<String> playerIds = user.getPlayerIds();
+    String apiKey = user.getApiKey();
+
+    List<CompletableFuture<PlayerDetailsResponse>> futures =
+      playerIds.stream()
+               .map(playerId -> supplyAsync(() -> playerService.fetchPlayerDetails(playerId, apiKey)))
+               .toList();
+
+    return futures.stream()
+                  .map(CompletableFuture::join)
+                  .collect(Collectors.toList());
   }
 
 }

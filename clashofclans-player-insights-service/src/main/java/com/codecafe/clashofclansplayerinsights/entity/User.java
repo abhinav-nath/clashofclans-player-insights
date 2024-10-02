@@ -1,10 +1,7 @@
 package com.codecafe.clashofclansplayerinsights.entity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +28,7 @@ public class User {
   @Column(unique = true, nullable = false)
   private String apiKey;
 
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-  private Set<Player> players;
+  @Column(nullable = false)
+  private Set<String> playerIds;
 
 }
