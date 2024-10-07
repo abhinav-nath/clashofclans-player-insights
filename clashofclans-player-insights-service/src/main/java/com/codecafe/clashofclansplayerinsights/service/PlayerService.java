@@ -8,12 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-
 @Service
 public class PlayerService {
 
-  private static final String COC_API_URL = "https://api.clashofclans.com/v1/players/";
+  private static final String COC_API_URL = "https://api.clashofclans.com/v1/players/%23";
 
   private final RestTemplate restTemplate;
 
@@ -22,12 +20,16 @@ public class PlayerService {
   }
 
   public PlayerDetailsResponse fetchPlayerDetails(String playerId, String apiKey) {
-    String url = COC_API_URL + URLEncoder.encode("#") + playerId;
+    String url = COC_API_URL + playerId;
 
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", apiKey);
+    headers.set("Authorization", apiKey);  // Pass the Authorization header as-is
 
     HttpEntity<String> entity = new HttpEntity<>(headers);
+
+    // Debugging: Print the URL and headers
+    System.out.println("Request URL: " + url);
+    System.out.println("Authorization Header: " + headers.get("Authorization"));
 
     try {
       ResponseEntity<PlayerDetailsResponse> response = restTemplate.exchange(
@@ -35,11 +37,10 @@ public class PlayerService {
       );
       return response.getBody();
     } catch (Exception ex) {
-      ex.printStackTrace();
+      ex.printStackTrace();  // Print the stack trace for more debugging information
     }
 
     return null;
-
   }
 
 }
